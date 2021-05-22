@@ -2,6 +2,14 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
+; Récupérer les infos sur les moniteurs 1 et 2
+; Créer les point A B C et D sur les moniteurs
+; Calculer les DemiLongeur et DemiHauteur
+; Déterminer la position de la fenêtre active :
+; - Vérifier si la fenêtre est sur le moniteur 1
+; - Vérifier que le coin en haut à gauche appartient à une des 4 zones
+; En fonction de la position de la fenêtre et de la toucche utilisée, modifier sa position
+
 InfoFenetre(ByRef nbmoniteur, ByRef MonWA1Top, ByRef MonWA2Top, ByRef MonWA1Right, ByRef MonWA2Right, ByRef MonWA1Bottom, ByRef MonWA2Bottom, ByRef MonWA1Left, ByRef MonWA2Left){
 	
 		SysGet, nbmoniteur, 80
@@ -26,16 +34,18 @@ DemiHauteur2 /= 2
 
 ;-----------------------------
 ;-----------------------------
-!Left::DeplaceGauche( DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x)
-!Right::DeplaceDroite( DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y)
+!Left::DeplaceGauche( DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y)
+!Right::DeplaceDroite( DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y, nbmoniteur)
 !Up::DeplaceHaut( DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y,  A2x, A2y)
-!Down::DeplaceBas( DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y)
+!Down::DeplaceBas( DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y, nbmoniteur)
 !^::WinSet, AlwaysOnTop, -1,A
 !m::WinSet, Style, -0xC00000,A
 !p::WinSet, Style, +0xC00000,A
-!PgUp::ChangeMoniteur(DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y)
-!PgDn::ChangeMoniteur(DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y)
-
+!PgUp::ChangeMoniteur(DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y, nbmoniteur)
+!PgDn::ChangeMoniteur(DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y, nbmoniteur)
+!Enter::RunPowerShell()
+!b::Run "C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+!e::Run "C:\Users\...\Documents\Q-Dir\Q-Dir_x64.exe"
 ;-----------------------------
 ;-----------------------------
 
@@ -178,7 +188,6 @@ aireRectangle(PointAx, PointAy, PointBx, PointDy){
 distance(Point1, Point2){
 	L := Point1 - Point2
 	L := Abs(L)
-	
 	return %L%
 }
 
@@ -190,8 +199,8 @@ AireTriangle(PointAx, PointAy, PointBx, PointBy, PointCx, PointCy){
 }
 
 OuEstLaFenetre(Fx, Fy, PointAx, PointAy, PointBx, PointDy, AireMoniteur){
-	offsetx := 5
-	offsety := 5
+	offsetx := 0
+	offsety := 0
 	AireT1 := AireTriangle(PointAx, PointAy, Fx + offsetx, Fy + offsety, PointBx, PointAy) ; AFB
 	AireT2 := AireTriangle(PointBx, PointAy, Fx + offsetx, Fy + offsety, PointBx, PointDy) ; BFC
 	AireT3 := AireTriangle(PointBx, PointDy, Fx + offsetx, Fy + offsety, PointAx, PointDy) ; CFD
@@ -199,24 +208,15 @@ OuEstLaFenetre(Fx, Fy, PointAx, PointAy, PointBx, PointDy, AireMoniteur){
 	
 	SumAireT := AireT1 + AireT2 + AireT3 + AireT4
 	
+	;MsgBox %AireMoniteur% %SumAireT% | A1 = %AireT1% A2 = %AireT2% A3 = %AireT3% A4 = %AireT4%
+	
 	Vrai := 0
-	if((Fx == -9 and Fy == -9) or (SumAireT == AireMoniteur)){
+	if(SumAireT == AireMoniteur){
 		Vrai := 1
 	}
 	return %Vrai%
 }
 
-SurMoniteur1(ByRef AireMoniteur1, Fx, Fy, ByRef A1x, ByRef A1y, ByRef B1x, ByRef B1y, ByRef C1x, ByRef C1y, ByRef D1x, ByRef D1y){
-	AireT1 := AireTriangle(A1x, A1y, Fx, Fy, B1x, B1y)
-	AireT2 := AireTriangle(B1x, B1y, Fx, Fy, C1x, C1y)
-	AireT3 := AireTriangle(D1x, D1y, Fx, Fy, C1x, C1y)
-	AireT4 := AireTriangle(D1x, D1y, Fx, Fy, A1x, A1y)
-	
-	SumAireT := AireT1 + AireT2 + AireT3 + AireT4
-	Vrai := 0
-
-	return %Vrai%
-}
 
 
 ;-----------------------------
@@ -230,54 +230,57 @@ GetSurMoniteur1(Fx, Fy, ByRef A1x, ByRef A1y, ByRef B1x, ByRef D1y){
 
 GetSurG1(Fx, Fy, ByRef DemiLongeur1, ByRef A1x, ByRef A1y, ByRef D1y){
 	aireMoniteurG1 := aireRectangle(A1x,A1y, A1x + DemiLongeur1, D1y)
-	surMoniteurG1 := OuEstLaFenetre(Fx, Fy , A1x, A1y, A1x + DemiLongeur1, D1y, aireMoniteurG1)
+	surMoniteurG1 := OuEstLaFenetre(Fx+1, Fy+1 , A1x, A1y, A1x + DemiLongeur1, D1y, aireMoniteurG1)
 	return %surMoniteurG1%
 }
 
 GetSurH1(Fx, Fy, Byref DemiHauteur1, ByRef A1x, ByRef A1y, ByRef B1x){
 	aireMoniteurH1 := aireRectangle(A1x,A1y, B1x, A1y + DemiHauteur1)
-	surMoniteurH1 := OuEstLaFenetre(Fx, Fy , A1x, A1y, B1x, A1y + DemiHauteur1, aireMoniteurH1)
+	surMoniteurH1 := OuEstLaFenetre(Fx+1, Fy+1 , A1x, A1y, B1x, A1y + DemiHauteur1, aireMoniteurH1)
 	return %surMoniteurH1%
 }
 
 GetSurG2(Fx, Fy, ByRef DemiHauteur2, ByRef DemiLongeur2, ByRef A1x, ByRef A2x, ByRef A1y, ByRef A2y){
-	aireMoniteurG2 := aireRectangle(0,0, DemiLongeur2, DemiHauteur2 * 2)
+	aireMoniteurG2 := aireRectangle(0, 0, DemiLongeur2, DemiHauteur2 * 2)
 	;surMoniteurG2 := OuEstLaFenetre(Fx - 449 + 1, Fy + 1280 + 0, 0,0, DemiLongeur2, DemiHauteur2 * 2, aireMoniteurG2) ; /!\ offsetx
-	surMoniteurG2 := OuEstLaFenetre(Fx - (A2x-A1x), Fy + 0 , 0,0, DemiLongeur2, DemiHauteur2 * 2, aireMoniteurG2)
+	surMoniteurG2 := OuEstLaFenetre(Fx-A2x+1, Fy-A2y+1 , 0, 0, DemiLongeur2, DemiHauteur2 * 2, aireMoniteurG2)
 	return %surMoniteurG2%
 }
 
 GetSurH2(Fx, Fy, ByRef DemiHauteur2, ByRef DemiLongeur2, ByRef A1x, ByRef A2x, ByRef A1y, ByRef A2y){
 	aireMoniteurH2 := aireRectangle(0,0, DemiLongeur2 * 2, DemiHauteur2)
 	;surMoniteurH2 := OuEstLaFenetre(Fx - 449 + 1, Fy + 1280 + 0, 0,0, DemiLongeur2 * 2, DemiHauteur2, aireMoniteurH2) ; /!\ offsetx
-	surMoniteurH2 := OuEstLaFenetre(Fx - (A2x-A1x), Fy + (A1y-A2y), 0,0, DemiLongeur2 * 2, DemiHauteur2, aireMoniteurH2)
+	surMoniteurH2 := OuEstLaFenetre(Fx-A2x+1, Fy-A2y+1 , 0, 0, DemiLongeur2 * 2, DemiHauteur2, aireMoniteurH2)
 	return %surMoniteurH2%
 }
 
-DeplaceGauche(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef DemiLongeur2, ByRef A1x, ByRef A1y, ByRef B1x, ByRef D1y, ByRef A2x){
-	WinGetPos,Fx,Fy,Fl,Fh,A
+DeplaceGauche(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef DemiLongeur2, ByRef A1x, ByRef A1y, ByRef B1x, ByRef D1y, ByRef A2x, Byref A2y){
 	
+	WinGetPos,Fx,Fy,Fl,Fh,A
+
 	surMoniteur1 := GetSurMoniteur1(Fx, Fy, A1x, A1y, B1x, D1y)
 	surMoniteurG1 := GetSurG1(Fx, Fy, DemiLongeur1, A1x, A1y, D1y)
 	surMoniteurH1 := GetSurH1(Fx, Fy, DemiHauteur1, A1x, A1y, B1x)
 	surMoniteurG2 := GetSurG2(Fx, Fy, DemiHauteur2, DemiLongeur2, A1x, A2x, A1y, A2y)
 	surMoniteurH2 := GetSurH2(Fx, Fy, DemiHauteur2, DemiLongeur2, A1x, A2x, A1y, A2y)
-	;MsgBox %surMoniteurG1% %surMoniteurH1% %surMoniteurG2% %surMoniteurH2%
+	
+	;MsgBox %surMoniteurG1% %surMoniteurH1% %surMoniteurG2% %surMoniteurH2% | %Fx% %Fy% | %A1x% %A2x%
+	
 	Switch surMoniteur1
 	{
 		case 0 :
 			Switch surMoniteurG2
 			{
 				case 0 :
-					Fx := A2x
+					Fx := A2x + 1
 					Fl := DemiLongeur2
 				default :
-					if(Fx == A2x and Fl != DemiLongeur2 * 2){
-						Fl := DemiLongeur2 * 2
+					if(Fx == A2x + 1 and Fl != (DemiLongeur2) * 2){
+						Fl := (DemiLongeur2) * 2
 					}
 					else{
-						Fx := A2x
-						Fl := DemiLongeur1
+						Fx := A2x + 1
+						Fl := DemiLongeur2
 					}
 			}
 		default :
@@ -298,12 +301,9 @@ DeplaceGauche(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef 
 			
 	}
 	WinMove,A,,%Fx%,%Fy%,%Fl%,%Fh%
-	
-	
-
 }
 
-DeplaceDroite(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef DemiLongeur2, ByRef A1x, ByRef A1y, ByRef B1x, ByRef D1y, ByRef A2x,  ByRef A2y){
+DeplaceDroite(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef DemiLongeur2, ByRef A1x, ByRef A1y, ByRef B1x, ByRef D1y, ByRef A2x,  ByRef A2y, ByRef nbmoniteur){
 
 	WinGetPos,Fx,Fy,Fl,Fh,A
 	
@@ -313,7 +313,7 @@ DeplaceDroite(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef 
 	surMoniteurG2 := GetSurG2(Fx, Fy, DemiHauteur2, DemiLongeur2, A1x, A2x, A1y, A2y)
 	surMoniteurH2 := GetSurH2(Fx, Fy, DemiHauteur2, DemiLongeur2, A1x, A2x, A1y, A2y)
 	
-	;MsgBox %surMoniteur1% %surMoniteurG1% %surMoniteurH1% %surMoniteurG2% %surMoniteurH2%
+	;MsgBox %surMoniteurG1% %surMoniteurH1% %surMoniteurG2% %surMoniteurH2% | %Fx% %Fy% | %A1x% %A2x%
 	
 	Switch surMoniteur1
 	{
@@ -339,10 +339,10 @@ DeplaceDroite(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef 
 			Switch surMoniteurG1
 			{
 				case 0 :
-					if(Fx == A1x + DemiLongeur1){
-						Fx := A2x 
+					if(Fx == A1x + DemiLongeur1 and nbmoniteur > 1){
+						Fx := A2x + 1
 						Fy := A2y
-						Fl := DemiLongeur2 * 2
+						Fl := (DemiLongeur2) * 2
 						Fh := DemiHauteur2 * 2
 					}
 					else{
@@ -350,7 +350,7 @@ DeplaceDroite(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef 
 						Fl := DemiLongeur1
 					}
 				default :
-					Fx := A1x + 1 + DemiLongeur1
+					Fx := A1x + DemiLongeur1 + 1
 					Fl := DemiLongeur1 - 1
 			}
 	}
@@ -366,7 +366,9 @@ DeplaceHaut(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef De
 	surMoniteurH1 := GetSurH1(Fx, Fy, DemiHauteur1, A1x, A1y, B1x)
 	surMoniteurG2 := GetSurG2(Fx, Fy, DemiHauteur2, DemiLongeur2, A1x, A2x, A1y, A2y)
 	surMoniteurH2 := GetSurH2(Fx, Fy, DemiHauteur2, DemiLongeur2, A1x, A2x, A1y, A2y)
-	;MsgBox %A2y% %Fy% %surMoniteurH2% %A1y%
+	
+	;MsgBox %surMoniteurG1% %surMoniteurH1% %surMoniteurG2% %surMoniteurH2% | %Fx% %Fy% | %A1x% %A2x%
+	
 	Switch surMoniteur1
 	{
 		case 0 :
@@ -375,10 +377,10 @@ DeplaceHaut(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef De
 				case 0 :
 					Fy := A2y
 				default :
-					if(Fx == A2x or Fx == A2x + DemiLongeur2){
+					if(Fx == A2x + 1 or Fx == A2x + DemiLongeur2){
 						Fy := A2y
-						Fx := A2x
-						Fl := DemiLongeur2 *2
+						Fx := A2x + 1
+						Fl := (DemiLongeur2) *2
 						Fh := DemiHauteur2 *2
 					}
 			}
@@ -400,7 +402,7 @@ DeplaceHaut(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef De
 	
 }
 
-DeplaceBas(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef DemiLongeur2, ByRef A1x, ByRef A1y, ByRef B1x, ByRef D1y, ByRef A2x, ByRef A2y){
+DeplaceBas(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef DemiLongeur2, ByRef A1x, ByRef A1y, ByRef B1x, ByRef D1y, ByRef A2x, ByRef A2y, ByRef nbmoniteur){
 
 	WinGetPos,Fx,Fy,Fl,Fh,A
 	
@@ -434,10 +436,10 @@ DeplaceBas(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef Dem
 			Switch surMoniteurH1
 			{
 				case 0 :
-					if(Fy == A1y + DemiHauteur1){
+					if(Fy == A1y + DemiHauteur1 and nbmoniteur > 1){
 						Fy := A2y
-						Fx := A2x
-						Fl := DemiLongeur2 *2
+						Fx := A2x + 1
+						Fl := (DemiLongeur2) *2
 						Fh := DemiHauteur2 *2
 					}else{
 						Fy := A1y + DemiHauteur1
@@ -452,8 +454,9 @@ DeplaceBas(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef Dem
 	WinMove,A,,%Fx%,%Fy%,%Fl%,%Fh%
 }
 
-ChangeMoniteur(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef DemiLongeur2, ByRef A1x, ByRef A1y, ByRef B1x, ByRef D1y, ByRef A2x, ByRef A2y){
+ChangeMoniteur(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef DemiLongeur2, ByRef A1x, ByRef A1y, ByRef B1x, ByRef D1y, ByRef A2x, ByRef A2y, ByRef nbmoniteur){
 		
+	if(nbmoniteur > 1){
 	WinGetPos,Fx,Fy,Fl,Fh,A
 	
 	surMoniteur1 := GetSurMoniteur1(Fx, Fy, A1x, A1y, B1x, D1y)
@@ -476,4 +479,13 @@ ChangeMoniteur(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef
 			Fh := DemiHauteur2 *2
 	}
 	WinMove,A,,%Fx%,%Fy%,%Fl%,%Fh%
+	}
+}
+
+RunPowerShell(){
+	Run "C:\Users\...\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Windows PowerShell\Windows PowerShell.lnk"
+	WinWait, ahk_exe powershell.exe 
+	WinActivate,ahk_exe powershell.exe
+	WinSet, AlwaysOnTop, -1,ahk_exe powershell.exe
+	WinSet, Style, -0xC00000,ahk_exe powershell.exe
 }
