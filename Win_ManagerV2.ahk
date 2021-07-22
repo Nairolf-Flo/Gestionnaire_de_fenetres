@@ -10,6 +10,25 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; - Vérifier que le coin en haut à gauche appartient à une des 4 zones
 ; En fonction de la position de la fenêtre et de la toucche utilisée, modifier sa position
 
+startInit(ByRef nbmoniteur, ByRef MonWA1Top, ByRef MonWA2Top, ByRef MonWA1Right, ByRef MonWA2Right, ByRef MonWA1Bottom, ByRef MonWA2Bottom, ByRef MonWA1Left, ByRef MonWA2Left, ByRef A1x, ByRef A1y, ByRef B1x, ByRef B1y, ByRef C1x, ByRef C1y, ByRef D1x, ByRef D1y, ByRef A2x, ByRef A2y, ByRef B2x, ByRef B2y, ByRef C2x, ByRef C2y, ByRef D2x, ByRef D2y){
+		MsgBox INIT
+		InfoFenetre(nbmoniteur, MonWA1Top, MonWA2Top, MonWA1Right, MonWA2Right, MonWA1Bottom, MonWA2Bottom, MonWA1Left, MonWA2Left)
+		ObtenirCoordonnees(nbmoniteur, A1x, A1y, B1x, B1y, C1x, C1y, D1x, D1y, A2x, A2y, B2x, B2y, C2x, C2y, D2x, D2y, MonWA1Top, MonWA2Top, MonWA1Right, MonWA2Right, MonWA1Bottom, MonWA2Bottom, MonWA1Left, MonWA2Left)
+		
+		DemiLongeur1 := distance(MonWA1Right, MonWA1Left)
+		DemiLongeur1 /= 2
+		DemiHauteur1 := distance(MonWA1Top, MonWA1Bottom)
+		DemiHauteur1 /= 2
+
+		;if (nbmoniteur == 2){
+			DemiLongeur2 := distance(MonWA2Right, MonWA2Left)
+			DemiLongeur2 /= 2
+			DemiHauteur2 := distance(MonWA2Top, MonWA2Bottom)
+			DemiHauteur2 /= 2
+		;}
+		;MsgBox %nbmoniteur% %MonWA2Top% %MonWA2Bottom% | %DemiHauteur2%
+}
+
 InfoFenetre(ByRef nbmoniteur, ByRef MonWA1Top, ByRef MonWA2Top, ByRef MonWA1Right, ByRef MonWA2Right, ByRef MonWA1Bottom, ByRef MonWA2Bottom, ByRef MonWA1Left, ByRef MonWA2Left){
 	
 		SysGet, nbmoniteur, 80
@@ -22,18 +41,23 @@ InfoFenetre(ByRef nbmoniteur, ByRef MonWA1Top, ByRef MonWA2Top, ByRef MonWA1Righ
 
 InfoFenetre(nbmoniteur, MonWA1Top, MonWA2Top, MonWA1Right, MonWA2Right, MonWA1Bottom, MonWA2Bottom, MonWA1Left, MonWA2Left)
 ObtenirCoordonnees(nbmoniteur, A1x, A1y, B1x, B1y, C1x, C1y, D1x, D1y, A2x, A2y, B2x, B2y, C2x, C2y, D2x, D2y, MonWA1Top, MonWA2Top, MonWA1Right, MonWA2Right, MonWA1Bottom, MonWA2Bottom, MonWA1Left, MonWA2Left)
+
 DemiLongeur1 := distance(MonWA1Right, MonWA1Left)
 DemiLongeur1 /= 2
-DemiLongeur2 := distance(MonWA2Right, MonWA2Left)
-DemiLongeur2 /= 2
 DemiHauteur1 := distance(MonWA1Top, MonWA1Bottom)
 DemiHauteur1 /= 2
-DemiHauteur2 := distance(MonWA2Top, MonWA2Bottom)
-DemiHauteur2 /= 2
+
+if (nbmoniteur > 1){
+	DemiLongeur2 := distance(MonWA2Right, MonWA2Left)
+	DemiLongeur2 /= 2
+	DemiHauteur2 := distance(MonWA2Top, MonWA2Bottom)
+	DemiHauteur2 /= 2
+}
 
 
 ;-----------------------------
 ;-----------------------------
+^!r::startInit(nbmoniteur,  MonWA1Top,  MonWA2Top,  MonWA1Right,  MonWA2Right,  MonWA1Bottom,  MonWA2Bottom,  MonWA1Left,  MonWA2Left,  A1x,  A1y,  B1x,  B1y,  C1x,  C1y,  D1x,  D1y,  A2x,  A2y,  B2x,  B2y,  C2x,  C2y,  D2x,  D2y)
 !Left::DeplaceGauche( DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y)
 !Right::DeplaceDroite( DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y, nbmoniteur)
 !Up::DeplaceHaut( DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y,  A2x, A2y)
@@ -43,9 +67,12 @@ DemiHauteur2 /= 2
 !p::WinSet, Style, +0xC00000,A
 !PgUp::ChangeMoniteur(DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y, nbmoniteur)
 !PgDn::ChangeMoniteur(DemiHauteur1,  DemiHauteur2,  DemiLongeur1,  DemiLongeur2,  A1x,  A1y,  B1x,  D1y, A2x, A2y, nbmoniteur)
-!Enter::RunPowerShell()
-!b::Run "C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
-!e::Run "C:\Users\...\Documents\Q-Dir\Q-Dir_x64.exe"
+^!Enter::RunPowerShell(DemiHauteur1,DemiLongeur1)
+
+!e::RunExplorer()
+^!t::WinSet, Transparent, 240, A
+^!y::WinSet, Transparent, 150, A
+^!o::WinSet, Transparent, OFF, A
 ;-----------------------------
 ;-----------------------------
 
@@ -291,7 +318,7 @@ DeplaceGauche(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef 
 					Fl := DemiLongeur1 - 1
 				default :
 					if(Fx == (A1x + 1) and Fl != (DemiLongeur1-1) * 2){
-						Fl := (DemiLongeur1-1) *2
+						Fl := (DemiLongeur1-1) * 2
 					}
 					else{
 						Fx := A1x + 1
@@ -308,7 +335,7 @@ DeplaceDroite(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef 
 	WinGetPos,Fx,Fy,Fl,Fh,A
 	
 	surMoniteur1 := GetSurMoniteur1(Fx, Fy, A1x, A1y, B1x, D1y)
-	surMoniteurG1 := GetSurG1(Fx, Fy, DemiLongeur1, A1x, A1y, D1y)
+	surMoniteurG1 := GetSurG1(Fx + 1, Fy, DemiLongeur1, A1x, A1y, D1y)
 	surMoniteurH1 := GetSurH1(Fx, Fy, DemiHauteur1, A1x, A1y, B1x)
 	surMoniteurG2 := GetSurG2(Fx, Fy, DemiHauteur2, DemiLongeur2, A1x, A2x, A1y, A2y)
 	surMoniteurH2 := GetSurH2(Fx, Fy, DemiHauteur2, DemiLongeur2, A1x, A2x, A1y, A2y)
@@ -324,7 +351,7 @@ DeplaceDroite(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef 
 					if(Fx == A2x + DemiLongeur2){
 						Fx := A1x + 1
 						Fy := A1y
-						Fl := (DemiLongeur1 - 1) * 2
+						Fl := DemiLongeur1 * 2
 						Fh := DemiHauteur1 * 2
 					}
 					else{
@@ -339,19 +366,19 @@ DeplaceDroite(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef 
 			Switch surMoniteurG1
 			{
 				case 0 :
-					if(Fx == A1x + DemiLongeur1 and nbmoniteur > 1){
+					if(Fx == (A1x + DemiLongeur1 - 1) and (nbmoniteur > 1)){
 						Fx := A2x + 1
 						Fy := A2y
-						Fl := (DemiLongeur2) * 2
+						Fl := DemiLongeur2 * 2
 						Fh := DemiHauteur2 * 2
 					}
 					else{
-						Fx := A1x + DemiLongeur1
+						Fx := A1x + DemiLongeur1 - 1
 						Fl := DemiLongeur1
 					}
 				default :
-					Fx := A1x + DemiLongeur1 + 1
-					Fl := DemiLongeur1 - 1
+					Fx := A1x + DemiLongeur1 - 1
+					Fl := DemiLongeur1
 			}
 	}
 	WinMove,A,,%Fx%,%Fy%,%Fl%,%Fh%
@@ -377,12 +404,10 @@ DeplaceHaut(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef De
 				case 0 :
 					Fy := A2y
 				default :
-					if(Fx == A2x + 1 or Fx == A2x + DemiLongeur2){
-						Fy := A2y
-						Fx := A2x + 1
-						Fl := (DemiLongeur2) *2
-						Fh := DemiHauteur2 *2
-					}
+					Fy := A2y
+					Fx := A2x + 1
+					Fl := (DemiLongeur2) *2
+					Fh := DemiHauteur2 *2
 			}
 		default :
 			Switch surMoniteurH1
@@ -390,12 +415,10 @@ DeplaceHaut(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef De
 				case 0 :
 					Fy := A1y					
 				default :
-					if(Fx == A1x + 1 or Fx == A1x + 1 + DemiLongeur1){
-						Fy := A1y
-						Fx := A1x + 1
-						Fl := (DemiLongeur1 - 1) *2
-						Fh := DemiHauteur1 *2
-					}
+					Fy := A1y
+					Fx := A1x + 1
+					Fl := (DemiLongeur1 - 1) *2
+					Fh := DemiHauteur1 *2
 			}
 	}
 	WinMove,A,,%Fx%,%Fy%,%Fl%,%Fh%
@@ -412,6 +435,8 @@ DeplaceBas(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef Dem
 	surMoniteurG2 := GetSurG2(Fx, Fy, DemiHauteur2, DemiLongeur2, A1x, A2x, A1y, A2y)
 	surMoniteurH2 := GetSurH2(Fx, Fy, DemiHauteur2, DemiLongeur2, A1x, A2x, A1y, A2y)
 	
+	;MsgBox %surMoniteurG1% %surMoniteurH1% %surMoniteur2% %surMoniteurH2% | %Fx% %Fy% | %A1x% %A2x% | %surMoniteur1%
+	
 	Switch surMoniteur1
 	{
 		case 0 :
@@ -423,6 +448,7 @@ DeplaceBas(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef Dem
 						Fx := A1x + 1
 						Fl := (DemiLongeur1 - 1) *2
 						Fh := DemiHauteur1 *2
+						
 					}else{
 						Fy := A2y + DemiHauteur2
 						Fh := DemiHauteur2
@@ -449,8 +475,8 @@ DeplaceBas(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef Dem
 					Fy := A1y + DemiHauteur1
 					Fh := DemiHauteur1
 			}
-			
 	}
+	
 	WinMove,A,,%Fx%,%Fy%,%Fl%,%Fh%
 }
 
@@ -471,21 +497,35 @@ ChangeMoniteur(Byref DemiHauteur1, ByRef DemiHauteur2, ByRef DemiLongeur1, ByRef
 			Fy := A1y
 			Fx := A1x + 1
 			Fl := (DemiLongeur1 - 1) *2
-			Fh := DemiHauteur2 *2
+			Fh := DemiHauteur1 *2
 		default :
 			Fy := A2y
 			Fx := A2x
 			Fl := DemiLongeur2 *2
 			Fh := DemiHauteur2 *2
 	}
-	WinMove,A,,%Fx%,%Fy%,%Fl%,%Fh%
+	
 	}
+	else{
+		Fy := A1y
+		Fx := A1x + 1
+		Fl := (DemiLongeur1 - 1) *2
+		Fh := DemiHauteur1 *2
+	}
+	WinMove,A,,%Fx%,%Fy%,%Fl%,%Fh%
 }
 
-RunPowerShell(){
-	Run "C:\Users\...\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Windows PowerShell\Windows PowerShell.lnk"
+RunPowerShell(Byref DemiHauteur1,Byref DemiLongeur1){
+	Run "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
 	WinWait, ahk_exe powershell.exe 
 	WinActivate,ahk_exe powershell.exe
-	WinSet, AlwaysOnTop, -1,ahk_exe powershell.exe
+	;WinSet, AlwaysOnTop, -1,ahk_exe powershell.exe
 	WinSet, Style, -0xC00000,ahk_exe powershell.exe
+}
+
+RunExplorer(){
+	Run "C:\Windows\explorer.exe"
+	WinWait, ahk_exe explorer.exe
+	WinActivate,ahk_exe explorer.exe
+	WinSet, Transparent, 240, A
 }
